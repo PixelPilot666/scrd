@@ -2,3 +2,6 @@ data_statistics/
 checkpoint/
 __pycache__/
 **/__pycache__/
+wandb/
+rebuttal/
+eccv_result/

@@ -9,4 +9,5 @@ python main.py --data_dir '/home/ubuntu/xwy/dataset/MVSA_Single' \
 --threshold 0.95 \
 --num_train_iter 256 \
 --optim AdamW \
---add_ulb False
+--add_ulb False \
+--use_wandb True

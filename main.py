@@ -3,6 +3,7 @@ import os
 import logging
 import random
 import warnings
+import wandb
 
 import numpy as np
 import torch
@@ -52,6 +53,13 @@ def main(args):
         warnings.warn('You have chosen a specific GPU. This will completely '
                       'disable data parallelism.')
 
+    if args.use_wandb:
+        wandb.init(
+            project=args.wandb_project,
+            name=args.wandb_name or args.save_name,
+            config=args
+        )
+    
     main_worker(args.gpu, args)
 
 
@@ -182,6 +190,17 @@ def main_worker(gpu, args):
         eval_acc = trainer(args, epoch, best_eval_acc, logger=logger)
         best_eval_acc = max(eval_acc, best_eval_acc)
 
+        # 记录到wandb
+        if args.use_wandb:  # 只在主GPU上记录
+            wandb.log({
+                'epoch': epoch,
+                'eval_acc': eval_acc,
+                'best_eval_acc': best_eval_acc
+            })
+            
+    # 完成训练后记录最终结果
+    if args.use_wandb:
+        wandb.run.summary['best_accuracy'] = best_eval_acc
     # logging.warning(f"GPU {args.rank} training is FINISHED")
 
 
@@ -286,6 +305,17 @@ if __name__ == "__main__":
                         help='seed for initializing training. ')
     parser.add_argument('--gpu', default=0, type=int,
                         help='GPU id to use.')
+    
+    
+    '''
+    Wandb Configurations
+    '''
+    parser.add_argument('--use_wandb', type=str2bool, default=True,
+                        help='whether to use wandb for experiment tracking')
+    parser.add_argument('--wandb_project', type=str, default='SCRD',
+                        help='wandb project name')
+    parser.add_argument('--wandb_name', type=str, default=None,
+                        help='wandb run name (defaults to save_name if not provided)')
 
     # config file
     parser.add_argument('--c', type=str, default='')
