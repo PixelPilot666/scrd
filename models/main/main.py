@@ -234,7 +234,8 @@ class S2_VER:
                 logits_v = output['pre_v']
                 logits_msa = output['pre_msa']
 
-                features_m = output['c_l'] + output['c_v']
+                # features_m = output['c_l'] + output['c_v']
+                features_m = output['c_m']
                 features_t = output['c_l']
                 features_v = output['c_v']
 

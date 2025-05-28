@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from transformers import BertModel
 import torchvision.models as models
 from math import sqrt
-# from .multiway_transformer import Attention
+from .fusion_model_c import fusion_model_c
 
 class Classifier(nn.Module):
     def __init__(self, input_size, hidden_size, num_classes):
@@ -96,6 +96,7 @@ class DMD(nn.Module):
         self.decoder_l = nn.Conv1d(512*2, 512, kernel_size=1, padding=0, bias=False)
         self.decoder_v = nn.Conv1d(512*2, 512, kernel_size=1, padding=0, bias=False)
 
+        self.fusion_model = fusion_model_c(image_feature_dim=512, mutimodal_feature_dim=1024, projected_output_dim=512, nhead=2)
 
 
     def forward(self, image, text):
@@ -105,6 +106,7 @@ class DMD(nn.Module):
         # x_l = F.dropout(text.transpose(1, 2), p=self.text_dropout, training=self.training)
         # x_v = image.transpose(1, 2)
 
+        
         text = self.proj_l(text.unsqueeze(2))
         image = self.proj_v(image.unsqueeze(2))
         # image = image.unsqueeze(2)
@@ -116,10 +118,14 @@ class DMD(nn.Module):
         pre_t, feat_t = self.t_classifier(s_l)
         pre_v, feat_v = self.v_classifier(s_v)
 
+        # Modality-common feature using fusion model
+
         # Modality-common feature
         c_l = self.encoder_c(text).squeeze()
         c_v = self.encoder_c(image).squeeze()
-        c_m = c_l+c_v
+        # c_m = c_l+c_v
+        c_m = self.fusion_model(text.squeeze(), image.squeeze())
+        
         c_list = [c_l, c_v]
         pre_m, feat_m = self.m_classifier(c_m)
         pre_m_in_v, _ = self.v_classifier(c_m)
@@ -171,6 +177,7 @@ class DMD(nn.Module):
 
             'c_l': c_l,
             'c_v': c_v,
+            'c_m': c_m,
 
             's_l_r': s_l_r,
             's_v_r': s_v_r,

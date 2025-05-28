@@ -5,7 +5,7 @@ python main.py --data_dir '/home/ubuntu/xwy/dataset/MVSA_Single' \
 --save_dir 'eccv_result/all_label' \
 --lr 1e-5 \
 --batch_size 2 \
---num_labels 3 \
+--num_labels 51 \
 --threshold 0.95 \
 --num_train_iter 256 \
 --optim AdamW \
